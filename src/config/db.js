@@ -27,31 +27,22 @@
 
 // module.exports = db;
 
-const mysql = require("mysql2/promise");
 require("dotenv").config();
+const { Sequelize } = require("sequelize");
 
-const databaseUrl = process.env.DATABASE_URL;
-
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL is missing. Check .env or Render env vars.");
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL missing");
 }
 
-// parse mysql://user:pass@host:port/dbname
-const url = new URL(databaseUrl);
-
-const db = mysql.createPool({
-  host: url.hostname,
-  port: url.port ? Number(url.port) : 3306,
-  user: decodeURIComponent(url.username),
-  password: decodeURIComponent(url.password),
-  database: url.pathname.replace("/", ""),
-  waitForConnections: true,
-  connectionLimit: 10,
-
-  // 👉 only use if cloud DB requires SSL
-  ssl: {
-    rejectUnauthorized: false,
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: "mysql",
+  logging: false,
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
   },
 });
 
-module.exports = db;
+module.exports = sequelize;
